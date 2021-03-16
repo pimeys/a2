@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["a2"] = [{"text":"impl&lt;'a&gt; Serialize for LocalizedAlert&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Serialize for APS&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Serialize for APSAlert&lt;'a&gt;","synthetic":false,"types":[]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

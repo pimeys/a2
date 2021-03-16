@@ -1,0 +1,600 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/response.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>response.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../a2/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<span id="2">  2</span>
+<span id="3">  3</span>
+<span id="4">  4</span>
+<span id="5">  5</span>
+<span id="6">  6</span>
+<span id="7">  7</span>
+<span id="8">  8</span>
+<span id="9">  9</span>
+<span id="10"> 10</span>
+<span id="11"> 11</span>
+<span id="12"> 12</span>
+<span id="13"> 13</span>
+<span id="14"> 14</span>
+<span id="15"> 15</span>
+<span id="16"> 16</span>
+<span id="17"> 17</span>
+<span id="18"> 18</span>
+<span id="19"> 19</span>
+<span id="20"> 20</span>
+<span id="21"> 21</span>
+<span id="22"> 22</span>
+<span id="23"> 23</span>
+<span id="24"> 24</span>
+<span id="25"> 25</span>
+<span id="26"> 26</span>
+<span id="27"> 27</span>
+<span id="28"> 28</span>
+<span id="29"> 29</span>
+<span id="30"> 30</span>
+<span id="31"> 31</span>
+<span id="32"> 32</span>
+<span id="33"> 33</span>
+<span id="34"> 34</span>
+<span id="35"> 35</span>
+<span id="36"> 36</span>
+<span id="37"> 37</span>
+<span id="38"> 38</span>
+<span id="39"> 39</span>
+<span id="40"> 40</span>
+<span id="41"> 41</span>
+<span id="42"> 42</span>
+<span id="43"> 43</span>
+<span id="44"> 44</span>
+<span id="45"> 45</span>
+<span id="46"> 46</span>
+<span id="47"> 47</span>
+<span id="48"> 48</span>
+<span id="49"> 49</span>
+<span id="50"> 50</span>
+<span id="51"> 51</span>
+<span id="52"> 52</span>
+<span id="53"> 53</span>
+<span id="54"> 54</span>
+<span id="55"> 55</span>
+<span id="56"> 56</span>
+<span id="57"> 57</span>
+<span id="58"> 58</span>
+<span id="59"> 59</span>
+<span id="60"> 60</span>
+<span id="61"> 61</span>
+<span id="62"> 62</span>
+<span id="63"> 63</span>
+<span id="64"> 64</span>
+<span id="65"> 65</span>
+<span id="66"> 66</span>
+<span id="67"> 67</span>
+<span id="68"> 68</span>
+<span id="69"> 69</span>
+<span id="70"> 70</span>
+<span id="71"> 71</span>
+<span id="72"> 72</span>
+<span id="73"> 73</span>
+<span id="74"> 74</span>
+<span id="75"> 75</span>
+<span id="76"> 76</span>
+<span id="77"> 77</span>
+<span id="78"> 78</span>
+<span id="79"> 79</span>
+<span id="80"> 80</span>
+<span id="81"> 81</span>
+<span id="82"> 82</span>
+<span id="83"> 83</span>
+<span id="84"> 84</span>
+<span id="85"> 85</span>
+<span id="86"> 86</span>
+<span id="87"> 87</span>
+<span id="88"> 88</span>
+<span id="89"> 89</span>
+<span id="90"> 90</span>
+<span id="91"> 91</span>
+<span id="92"> 92</span>
+<span id="93"> 93</span>
+<span id="94"> 94</span>
+<span id="95"> 95</span>
+<span id="96"> 96</span>
+<span id="97"> 97</span>
+<span id="98"> 98</span>
+<span id="99"> 99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+</pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">//! The APNs response types</span>
+
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
+
+<span class="doccomment">/// The response data from APNs.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Response</span> {
+    <span class="doccomment">/// If the notification was not successful, has the body content from APNs.</span>
+    <span class="kw">pub</span> <span class="ident">error</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ErrorBody</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// Is the value defined in the `NotificationOptions` or a new Uuid</span>
+    <span class="doccomment">/// generated by APNs.</span>
+    <span class="kw">pub</span> <span class="ident">apns_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// The HTTP response code.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * 200 Success</span>
+    <span class="doccomment">/// * 400 Bad request</span>
+    <span class="doccomment">/// * 403 There was an error with the certificate or with the provider authentication token</span>
+    <span class="doccomment">/// * 405 The request used a bad `:method` value. Only `POST` requests are supported.</span>
+    <span class="doccomment">/// * 410 The device token is no longer active for the topic.</span>
+    <span class="doccomment">/// * 413 The notification payload was too large.</span>
+    <span class="doccomment">/// * 429 The server received too many requests for the same device token.</span>
+    <span class="doccomment">/// * 500 Internal server error.</span>
+    <span class="doccomment">/// * 503 The server is shutting down and unavailable.</span>
+    <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">u16</span>,
+}
+
+<span class="doccomment">/// The response body from APNs. Only available for errors.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ErrorBody</span> {
+    <span class="doccomment">/// The error indicating the reason for the failure.</span>
+    <span class="kw">pub</span> <span class="ident">reason</span>: <span class="ident">ErrorReason</span>,
+
+    <span class="doccomment">/// If the value of the `ErrorReason` is `Unregistered`, the value of this</span>
+    <span class="doccomment">/// key is the last time at which APNs confirmed that the device token was</span>
+    <span class="doccomment">/// no longer valid for the topic.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Stop pushing notifications until the device registers a token with a</span>
+    <span class="doccomment">/// later timestamp with your provider.</span>
+    <span class="kw">pub</span> <span class="ident">timestamp</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+}
+
+<span class="doccomment">/// A description what went wrong with the push notification.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ErrorReason</span> {
+    <span class="doccomment">/// The collapse identifier exceeds the maximum allowed size.</span>
+    <span class="ident">BadCollapseId</span>,
+
+    <span class="doccomment">/// The specified device token was bad. Verify that the request contains a</span>
+    <span class="doccomment">/// valid token and that the token matches the environment.</span>
+    <span class="ident">BadDeviceToken</span>,
+
+    <span class="doccomment">/// The `apns_expiration` in `NotificationOptions` is bad.</span>
+    <span class="ident">BadExpirationDate</span>,
+
+    <span class="doccomment">/// The `apns_id` in `NotificationOptions` is bad.</span>
+    <span class="ident">BadMessageId</span>,
+
+    <span class="doccomment">/// The `apns_priority` in `NotificationOptions` is bad.</span>
+    <span class="ident">BadPriority</span>,
+
+    <span class="doccomment">/// The `apns_topic` in `NotificationOptions` is bad.</span>
+    <span class="ident">BadTopic</span>,
+
+    <span class="doccomment">/// The device token does not match the specified topic.</span>
+    <span class="ident">DeviceTokenNotForTopic</span>,
+
+    <span class="doccomment">/// One or more headers were repeated.</span>
+    <span class="ident">DuplicateHeaders</span>,
+
+    <span class="doccomment">/// Idle time out.</span>
+    <span class="ident">IdleTimeout</span>,
+
+    <span class="doccomment">/// The device token is not specified in the payload.</span>
+    <span class="ident">MissingDeviceToken</span>,
+
+    <span class="doccomment">/// The `apns_topic` of the `NotificationOptions` was not specified and was required.</span>
+    <span class="doccomment">/// The `apns_topic` header is mandatory when the client is connected using the</span>
+    <span class="doccomment">/// `CertificateConnector` and the included PKCS12 file includes multiple topics,</span>
+    <span class="doccomment">/// or when using the `TokenConnector`.</span>
+    <span class="ident">MissingTopic</span>,
+
+    <span class="doccomment">/// The message payload was empty.</span>
+    <span class="ident">PayloadEmpty</span>,
+
+    <span class="doccomment">/// Pushing to this topic is not allowed.</span>
+    <span class="ident">TopicDisallowed</span>,
+
+    <span class="doccomment">/// The certificate was bad.</span>
+    <span class="ident">BadCertificate</span>,
+
+    <span class="doccomment">/// The client certificate was for the wrong environment.</span>
+    <span class="ident">BadCertificateEnvironment</span>,
+
+    <span class="doccomment">/// The provider token is stale and a new token should be generated.</span>
+    <span class="ident">ExpiredProviderToken</span>,
+
+    <span class="doccomment">/// The specified action is not allowed.</span>
+    <span class="ident">Forbidden</span>,
+
+    <span class="doccomment">/// The provider token is not valid or the token signature could not be verified.</span>
+    <span class="ident">InvalidProviderToken</span>,
+
+    <span class="doccomment">/// No provider certificate was used to connect to APNs and Authorization</span>
+    <span class="doccomment">/// header was missing or no provider token was specified.</span>
+    <span class="ident">MissingProviderToken</span>,
+
+    <span class="doccomment">/// The request path value is bad.</span>
+    <span class="ident">BadPath</span>,
+
+    <span class="doccomment">/// The request method was not `POST`.</span>
+    <span class="ident">MethodNotAllowed</span>,
+
+    <span class="doccomment">/// The device token is inactive for the specified topic. You should stop sending</span>
+    <span class="doccomment">/// notifications to this token.</span>
+    <span class="ident">Unregistered</span>,
+
+    <span class="doccomment">/// The message payload was too large (4096 bytes)</span>
+    <span class="ident">PayloadTooLarge</span>,
+
+    <span class="doccomment">/// The provider token is being updated too often.</span>
+    <span class="ident">TooManyProviderTokenUpdates</span>,
+
+    <span class="doccomment">/// Too many requests were made consecutively to the same device token.</span>
+    <span class="ident">TooManyRequests</span>,
+
+    <span class="doccomment">/// An internal server error occurred.</span>
+    <span class="ident">InternalServerError</span>,
+
+    <span class="doccomment">/// The service is unavailable.</span>
+    <span class="ident">ServiceUnavailable</span>,
+
+    <span class="doccomment">/// The server is shutting down.</span>
+    <span class="ident">Shutdown</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ErrorReason</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">ErrorReason</span>::<span class="ident">BadCollapseId</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The collapse identifier exceeds the maximum allowed size.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadDeviceToken</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The specified device token was bad. Verify that the request contains a valid token and that the token matches the environment.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadExpirationDate</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The `apns_expiration` in `NotificationOptions` is bad.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadMessageId</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The `apns_id` in `NotificationOptions` is bad.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadPriority</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The `apns_priority` in `NotificationOptions` is bad.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadTopic</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The `apns_topic` in `NotificationOptions` is bad.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">DeviceTokenNotForTopic</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The device token does not match the specified topic.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">DuplicateHeaders</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;One or more headers were repeated.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">IdleTimeout</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;Idle time out.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">MissingDeviceToken</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The device token is not specified in the payload.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">MissingTopic</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The `apns_topic` of the `NotificationOptions` was not specified and was required. The `apns_topic` header is mandatory when the client is connected using the `CertificateConnector` and the included PKCS12 file includes multiple topics, or when using the `TokenConnector`.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">PayloadEmpty</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The message payload was empty.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">TopicDisallowed</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;Pushing to this topic is not allowed.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadCertificate</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The certificate was bad.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadCertificateEnvironment</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The client certificate was for the wrong environment.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">ExpiredProviderToken</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The provider token is stale and a new token should be generated.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">Forbidden</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The specified action is not allowed.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">InvalidProviderToken</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The provider token is not valid or the token signature could not be verified.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">MissingProviderToken</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;No provider certificate was used to connect to APNs and Authorization header was missing or no provider token was specified.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">BadPath</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The request path value is bad.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">MethodNotAllowed</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The request method was not `POST`.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">Unregistered</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The device token is inactive for the specified topic. You should stop sending notifications to this token.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">PayloadTooLarge</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The message payload was too large (4096 bytes)&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">TooManyProviderTokenUpdates</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The provider token is being updated too often.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">TooManyRequests</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;Too many requests were made consecutively to the same device token.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">InternalServerError</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;An internal server error occurred.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">ServiceUnavailable</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The service is unavailable.&quot;</span>,
+            <span class="ident">ErrorReason</span>::<span class="ident">Shutdown</span> <span class="op">=</span><span class="op">&gt;</span>
+                <span class="string">&quot;The server is shutting down.&quot;</span>,
+        };
+
+        <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">s</span>)
+    }
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use</span> <span class="ident">serde_json</span>;
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">test_error_response_parsing</span>() {
+        <span class="kw">let</span> <span class="ident">errors</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadCollapseId</span>, <span class="string">&quot;BadCollapseId&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadDeviceToken</span>, <span class="string">&quot;BadDeviceToken&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadExpirationDate</span>, <span class="string">&quot;BadExpirationDate&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadMessageId</span>, <span class="string">&quot;BadMessageId&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadPriority</span>, <span class="string">&quot;BadPriority&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadTopic</span>, <span class="string">&quot;BadTopic&quot;</span>, <span class="prelude-val">None</span>),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">DeviceTokenNotForTopic</span>,
+                <span class="string">&quot;DeviceTokenNotForTopic&quot;</span>,
+                <span class="prelude-val">None</span>,
+            ),
+            (<span class="ident">ErrorReason</span>::<span class="ident">DuplicateHeaders</span>, <span class="string">&quot;DuplicateHeaders&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">IdleTimeout</span>, <span class="string">&quot;IdleTimeout&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">MissingDeviceToken</span>, <span class="string">&quot;MissingDeviceToken&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">MissingTopic</span>, <span class="string">&quot;MissingTopic&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">PayloadEmpty</span>, <span class="string">&quot;PayloadEmpty&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">TopicDisallowed</span>, <span class="string">&quot;TopicDisallowed&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadCertificate</span>, <span class="string">&quot;BadCertificate&quot;</span>, <span class="prelude-val">None</span>),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">BadCertificateEnvironment</span>,
+                <span class="string">&quot;BadCertificateEnvironment&quot;</span>,
+                <span class="prelude-val">None</span>,
+            ),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">ExpiredProviderToken</span>,
+                <span class="string">&quot;ExpiredProviderToken&quot;</span>,
+                <span class="prelude-val">None</span>,
+            ),
+            (<span class="ident">ErrorReason</span>::<span class="ident">Forbidden</span>, <span class="string">&quot;Forbidden&quot;</span>, <span class="prelude-val">None</span>),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">InvalidProviderToken</span>,
+                <span class="string">&quot;InvalidProviderToken&quot;</span>,
+                <span class="prelude-val">None</span>,
+            ),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">MissingProviderToken</span>,
+                <span class="string">&quot;MissingProviderToken&quot;</span>,
+                <span class="prelude-val">None</span>,
+            ),
+            (<span class="ident">ErrorReason</span>::<span class="ident">BadPath</span>, <span class="string">&quot;BadPath&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">MethodNotAllowed</span>, <span class="string">&quot;MethodNotAllowed&quot;</span>, <span class="prelude-val">None</span>),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">Unregistered</span>,
+                <span class="string">&quot;Unregistered&quot;</span>,
+                <span class="prelude-val">Some</span>(<span class="number">1508249865488u64</span>),
+            ),
+            (<span class="ident">ErrorReason</span>::<span class="ident">PayloadTooLarge</span>, <span class="string">&quot;PayloadTooLarge&quot;</span>, <span class="prelude-val">None</span>),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">TooManyProviderTokenUpdates</span>,
+                <span class="string">&quot;TooManyProviderTokenUpdates&quot;</span>,
+                <span class="prelude-val">None</span>,
+            ),
+            (<span class="ident">ErrorReason</span>::<span class="ident">TooManyRequests</span>, <span class="string">&quot;TooManyRequests&quot;</span>, <span class="prelude-val">None</span>),
+            (
+                <span class="ident">ErrorReason</span>::<span class="ident">InternalServerError</span>,
+                <span class="string">&quot;InternalServerError&quot;</span>,
+                <span class="prelude-val">None</span>,
+            ),
+            (<span class="ident">ErrorReason</span>::<span class="ident">ServiceUnavailable</span>, <span class="string">&quot;ServiceUnavailable&quot;</span>, <span class="prelude-val">None</span>),
+            (<span class="ident">ErrorReason</span>::<span class="ident">Shutdown</span>, <span class="string">&quot;Shutdown&quot;</span>, <span class="prelude-val">None</span>),
+        ];
+
+        <span class="kw">for</span> <span class="ident">error</span> <span class="kw">in</span> <span class="ident">errors</span>.<span class="ident">into_iter</span>() {
+            <span class="kw">let</span> <span class="ident">response_data</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">error</span>.<span class="number">2</span> {
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">json</span><span class="macro">!</span>({<span class="string">&quot;reason&quot;</span>: <span class="ident">error</span>.<span class="number">1</span>}),
+                <span class="prelude-val">Some</span>(<span class="ident">ts</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">json</span><span class="macro">!</span>({<span class="string">&quot;reason&quot;</span>: <span class="ident">error</span>.<span class="number">1</span>, <span class="string">&quot;timestamp&quot;</span>: <span class="ident">ts</span>}),
+            };
+
+            <span class="kw">let</span> <span class="ident">response_string</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">to_string</span>(<span class="kw-2">&amp;</span><span class="ident">response_data</span>).<span class="ident">unwrap</span>();
+
+            <span class="kw">let</span> <span class="ident">response_body</span>: <span class="ident">ErrorBody</span> <span class="op">=</span> <span class="ident">serde_json</span>::<span class="ident">from_str</span>(<span class="kw-2">&amp;</span><span class="ident">response_string</span>).<span class="ident">unwrap</span>();
+
+            <span class="kw">let</span> <span class="ident">expected_body</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">error</span>.<span class="number">2</span> {
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorBody</span> {
+                    <span class="ident">reason</span>: <span class="ident">error</span>.<span class="number">0</span>,
+                    <span class="ident">timestamp</span>: <span class="prelude-val">None</span>,
+                },
+                <span class="prelude-val">Some</span>(<span class="ident">ts</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ErrorBody</span> {
+                    <span class="ident">reason</span>: <span class="ident">error</span>.<span class="number">0</span>,
+                    <span class="ident">timestamp</span>: <span class="prelude-val">Some</span>(<span class="ident">ts</span>),
+                },
+            };
+
+            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">expected_body</span>, <span class="ident">response_body</span>);
+        }
+    }
+}
+</pre></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "a2";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

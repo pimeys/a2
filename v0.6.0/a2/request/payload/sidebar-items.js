@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["APSAlert","Different notification content types."]],"struct":[["APS","The pre-defined notification data."],["Payload","The data and options for a push notification."]]});
